@@ -27,7 +27,7 @@
         }
         .top-left {
             position: absolute;
-            top: 10px; /* 미션판을 50px 아래로 내림 */
+            top: 15px; /* 미션판을 50px 아래로 내림 */
             left: 0;
             display: flex;
             flex-direction: column;
@@ -305,7 +305,11 @@
         }
     </style>
     <script>
-        let timers = [];
+        let timers = {
+            '30초': null,
+            '1분': null,
+            '10분': null,
+        };
         let timerPositions = [
             { top: '33px', left: '30%' },
             { top: '33px', left: '50%' },
@@ -357,7 +361,7 @@
                     { text: '코난', audio: 'https://raw.githubusercontent.com/yunrang2/upload/master/코난등장.mp3' },
                     { text: '황당', audio: 'https://raw.githubusercontent.com/yunrang2/upload/master/황당.mp3' },
                     { text: '멸망', audio: 'https://raw.githubusercontent.com/yunrang2/upload/master/멸망.mp3' },
-                    { text: '몽키매직', audio: 'https://raw.githubusercontent.com/yunrang2/upload/master/몽키매직.mp3' },
+                    { text: '반야심경', audio: 'https://raw.githubusercontent.com/yunrang2/upload/master/반야심경리믹스.mp3' },
                     { text: '중지', action: stopAudio, className: 'stop-button' }
                 ];
             } else if (type === 'reaction') {
@@ -374,9 +378,9 @@
                 ];
             } else if (type === 'timer') {
                 buttons = [
-                    { text: '30초', action: () => createTimer(30) },
+                    { text: '30초', action: () => addToTimer('30초', 30) },
                     { text: '1분', action: handleOneMinuteButton },
-                    { text: '10분', action: () => createTimer(600) },
+                    { text: '10분', action: () => addToTimer('10분', 600) },
                     { text: '직접 설정', action: openCustomTimerModal }
                 ];
             }
@@ -421,14 +425,16 @@
             contentVisible = !contentVisible;
         }
 
-        function createTimer(duration) {
-            let timer = timers.find(t => t.duration === duration);
-            if (timer) {
-                timer.remaining += duration;
-                timer.element.textContent = formatTime(timer.remaining);
-                return;
+        function addToTimer(label, duration) {
+            if (timers[label]) {
+                timers[label].remaining += duration;
+                timers[label].element.textContent = formatTime(timers[label].remaining);
+            } else {
+                createTimer(label, duration);
             }
+        }
 
+        function createTimer(label, duration) {
             let timerBox = document.createElement('div');
             timerBox.className = 'timer-box';
             timerBox.dataset.duration = duration;
@@ -440,14 +446,14 @@
             timerBox.style.display = 'block';
             timerBox.textContent = formatTime(duration);
 
-            timer = {
+            const timer = {
                 element: timerBox,
                 duration: duration,
                 remaining: duration,
                 interval: null,
                 active: true
             };
-            timers.push(timer);
+            timers[label] = timer;
 
             timerBox.onclick = () => {
                 if (timer.active) {
@@ -463,10 +469,10 @@
 
         function handleOneMinuteButton() {
             if (firstMinuteClick) {
-                createTimer(70); // 1분 10초
+                addToTimer('1분', 70); // 1분 10초
                 firstMinuteClick = false;
             } else {
-                createTimer(60); // 1분
+                addToTimer('1분', 60); // 1분
             }
         }
 
@@ -534,7 +540,7 @@
             hideContent();
 
             const duration = 1 * 60 + 9; // 1분 9초
-            createTimer(duration);
+            addToTimer('1분 9초', duration);
 
             playAudio('https://raw.githubusercontent.com/yunrang2/upload/master/뿌에.mp3');
         }
@@ -548,7 +554,7 @@
             const seconds = parseInt(document.getElementById('custom-seconds').value, 10);
             const duration = (minutes * 60) + seconds;
             toggleModal('input-timer-modal');
-            createTimer(duration);
+            addToTimer(`${minutes}분 ${seconds}초`, duration);
         }
 
         function showWaitingScreen() {
